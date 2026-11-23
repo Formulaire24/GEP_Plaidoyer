@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analyse croisée des expérimentations de transferts monétaires</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f1;--card:#fff;--ink:#17302b;--mute:#58706a;--line:#d3dcd7;--acc:#1f6b57;--onacc:#fff;--sun:#e8a33d;--err:#b3341f;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1f1b;--card:#172b26;--ink:#e8f0ec;--mute:#9db3ac;--line:#2d4741;--acc:#6fd0b2;--onacc:#0f1f1b;--err:#ff8b73}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif}
+.app{display:grid;grid-template-columns:340px 1fr;min-height:100vh;text-align: center;}
+.side{position:sticky;top:0;height:100vh;background:#12392f;color:#e9f3ee;padding:24px 22px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.side h1{font-size:1.35rem;margin:0}
+.brand{font-size:.8rem;color:#9fc4b6}
+.side .intro{color:#b9d3c8;font-size:.86rem;margin:0;text-align:left}
+.side .intro b{color:var(--sun)}
+.steps{flex-direction:column;gap:0;margin:6px 0;padding:0;list-style:none}
+.steps li{flex:none}
+.steps button{all:unset;display:flex;align-items:center;gap:10px;border:0;padding:6px 0;color:#9fc4b6;font-size:.92rem;cursor:pointer}
+.steps b{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;border:2px solid #3f6a5d;font:700 .82rem "Bricolage Grotesque",sans-serif}
+.steps .on button{color:#fff;font-weight:700;border:0}
+.steps .on b{background:var(--sun);border-color:var(--sun);color:#12392f}
+.steps .done button{border:0}
+.steps .done b{background:#2f6b59;border-color:#2f6b59;color:#fff}
+.prog{margin-top:auto;font-size:.84rem;color:#d4e6de;text-align:left}
+.prog small{color:#9fc4b6;font-size:.78rem}
+.bar{height:6px;background:#2a5246;border-radius:6px;overflow:hidden;margin-bottom:6px}
+.bar i{display:block;height:100%;width:0;background:var(--sun);transition:width .3s}
+.saved{display:inline-block;color:var(--sun);font-weight:700;opacity:0;transition:opacity .4s;margin-top:4px}
+.saved.on{opacity:1}
+.main{padding:40px 32px 60px;max-width:960px;margin:0 auto;width:100%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:32px 38px;animation:fade .25s ease;text-align:left}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1,h2{font-family:"Bricolage Grotesque",Georgia,serif;line-height:1.15;margin:0}
+h2{font-size:1.9rem;margin-bottom:4px}
+.sub{color:var(--mute);margin:0 0 20px}
+.g{font:700 1.1rem "Bricolage Grotesque",Georgia,serif;color:var(--acc);margin:34px 0 0;padding-bottom:5px;border-bottom:3px solid var(--sun);display:inline-block}
+.sub+.g{margin-top:8px}
+.g+.q{border-top:0}
+.q{padding:20px 0;border-top:1px solid var(--line)}
+.q>label,.q>.t{display:block;font-weight:700;margin-bottom:4px}
+.req{color:var(--err)}
+.hint{color:var(--mute);font-size:.92rem;margin:0 0 10px}
+.in{width:100%;max-width:480px;font:inherit;color:inherit;background:transparent;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px}
+.in.n{max-width:180px}.suf{margin-left:8px;color:var(--mute);font-weight:700}
+.in:focus,.in:hover{border-color:var(--acc)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.ch{position:relative}
+.ch input,.sc input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.ch span{display:inline-block;border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.ch input:checked+span{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.ch input:focus-visible+span,.sc input:focus-visible+span,.rk:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.ch span:hover,.sc span:hover{border-color:var(--acc)}
+.sc{display:flex;gap:8px}
+.sc label{position:relative;flex:1;max-width:64px}
+.sc span{display:block;text-align:center;border:1.5px solid var(--line);border-radius:10px;padding:9px 0;font-weight:700;transition:border-color .15s,background .15s}
+.sc input:checked+span{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:8px 0;border-top:1px dashed var(--line)}
+.rks{display:grid;gap:8px}
+.rk{all:unset;box-sizing:border-box;display:flex;gap:12px;align-items:center;border:1.5px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .15s}
+.rk:hover{border-color:var(--acc)}
+.rk b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1.5px dashed var(--line);flex:none;font-family:"Bricolage Grotesque",sans-serif}
+.rk.on{border-color:var(--acc)}.rk.on b{background:var(--acc);color:var(--onacc);border:0}
+.lnk{all:unset;cursor:pointer;color:var(--acc);text-decoration:underline;margin-top:8px;display:inline-block}
+.msg{display:none;color:var(--err);font-size:.92rem;margin-top:8px;font-weight:700}
+.q.err .msg{display:block}.q.err{border-left:4px solid var(--err);padding-left:14px}
+.errs{background:color-mix(in srgb,var(--err) 8%,transparent);border:1.5px solid var(--err);border-radius:10px;padding:14px 18px;margin:0 0 18px}
+.errs p{margin:0 0 8px;font-weight:700;color:var(--err)}
+.errs button{all:unset;cursor:pointer;display:block;color:var(--ink);text-decoration:underline;padding:3px 0}
+.s5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;position:relative;max-width:660px;margin-top:8px}
+.s5::before{content:"";position:absolute;left:10%;right:10%;top:23px;height:3px;background:var(--line)}
+.s5 .c{text-align:center;position:relative}
+.s5 label{position:relative;display:inline-block}
+.s5 input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.s5 span{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background:var(--card);font-weight:700;transition:transform .15s,border-color .15s,background .15s}
+.s5 span:hover{border-color:var(--acc)}
+.s5 input:checked+span{background:var(--acc);color:var(--onacc);border-color:var(--acc);transform:scale(1.12)}
+.s5 input:focus-visible+span{outline:3px solid var(--sun);outline-offset:3px}
+.s5 small{display:block;margin-top:8px;font-size:.82rem;line-height:1.3;color:var(--mute)}
+.s5 label:has(input:checked)+small{color:var(--ink);font-weight:700}
+.nav{position:sticky;bottom:0;background:var(--card);padding:16px 0 4px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px}
+.btn{font:inherit;font-weight:700;border-radius:10px;padding:12px 24px;cursor:pointer;border:1.5px solid var(--acc);background:var(--acc);color:var(--onacc);transition:filter .15s}
+.btn:hover{filter:brightness(1.08)}
+.btn.g{background:transparent;color:var(--ink);border-color:var(--line)}
+select.in{color:var(--ink)}
+select.in:has(option[value=""]:checked){color:var(--mute)}
+.btn:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.end{text-align:left}.end p{max-width:56ch}
+.intro-txt{text-align:left}.intro-txt p{margin:0 0 14px;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+.intro-title{text-align:center;text-wrap:balance;margin-bottom:18px}
+.intro-txt p.dur{text-align:center;margin-top:20px}
+.intro-txt p.note{font-size:.88rem;font-style:italic;text-align:left;color:var(--mute);margin:0}
+.intro-txt p:last-child{margin-bottom:0}
+noscript p{color:var(--err);font-weight:700}
+.row .sc{gap:8px}
+.row .sc label{flex:none;width:42px;max-width:none}
+.row .sc span{display:grid;place-items:center;width:42px;height:42px;padding:0;border-radius:50%;border-width:2px}
+.row .sc input:checked+span{transform:scale(1.08)}
+.logo{margin-top:14px;padding-top:14px;border-top:1px solid #2a5246;text-align:center}
+.logo>div{font-size:.8rem;line-height:1.4}.logo>div div{white-space:nowrap}
+.logo img{display:block;width:130px;margin:0 auto;filter:invert(1)}
+.logo p{margin:0 0 8px;font-size:.9rem;color:#7fa394}
+@media(max-width:900px){.app{display:block}.side{position:static;height:auto;padding:22px 20px}.steps{flex-direction:row;gap:14px}.steps button span{display:none}.steps .on button span{display:inline}.main{padding:16px 10px}.card{padding:20px}}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<noscript><p>Ce formulaire nécessite JavaScript pour fonctionner. Activez-le ou contactez la personne coordinatrice pour une version alternative.</p></noscript>
+<div class="app">
+<aside class="side">
+<h1>PLAIDOYER <br> • <br>Analyse croisée des expérimentations</h1>
+<p class="intro">Décrivez votre expérimentation de transferts monétaires autour de l'alimentation durable pour permettre d'identifier les points de comparaison aux autres et appuyer le plaidoyer du groupe.</p>
+<ol class="steps" id="steps"></ol>
+<div class="prog" id="prog"><div class="bar"><i id="bar"></i></div><span id="pt"></span><br><span class="saved" id="saved">✓ Enregistré</span><br><small>Vos réponses sont gardées automatiquement dans ce navigateur.</small></div>
+<div class="logo"><div style="text-align: center;">
+  <div>Groupe d’échanges de pratiques</div>
+   <div>Transferts monétaires alimentation durable</div>
+</div><img src="logo-nanterre.png" alt="Ville de Nanterre"></div>
+</aside>
+<main class="main"><div class="card" id="card"></div></main>
+</div>
+<script>
+const CFG={ENDPOINT:"https://script.google.com/macros/s/AKfycbzIz2qmhWs8NNhyCBUdZUKMSpuTVYsx3p6cUiiOiHXNHs2cDIPl8-HTejSymDOnSTw2/exec"};
+const sc=(k,l,lo,hi,mid,req,hint)=>({k,l,type:"scale",lo,hi,mid,req,hint});
+const S=[
+{t:"Introduction",intro:1,q:[]},
+{t:"Le projet",q:[
+ {k:"nom",g:"Le projet",l:"Nom du projet",type:"text",req:1},
+ {k:"structures",l:"Structure(s) porteuse(s)",type:"text",req:1},
+ {k:"territoire",l:"Territoire concerné",type:"radio",req:1,opts:["Commune","Groupement de communes","Département","Région"]},
+ {k:"typologie",l:"Typologie du territoire",type:"radio",req:1,opts:["Rural","Périurbain","Urbain"]},
+ {k:"usagers_personnes",g:"Les usagers",l:"Nombre de personnes concernées",type:"num"},
+ {k:"usagers_foyers",l:"Nombre de foyers ou familles concernés",type:"num"},
+ {k:"etat_eval",g:"L’évaluation",l:"État d’avancement de l’évaluation",type:"radio",req:1,opts:["Terminée","En cours (certains éléments sont déjà disponibles)","En cours (aucun élément disponible pour l’instant)","À venir"]},
+ {k:"etat_eval_prec",l:"Précisez",hint:"Quels éléments sont déjà disponibles ?",type:"text",show:()=>A.etat_eval==="En cours (certains éléments sont déjà disponibles)"}]},
+{t:"L’aide",q:[
+ {k:"montant",g:"Le montant",l:"Montant mensuel par adulte",hint:"En euros",type:"num",suf:"€",req:1},
+ {k:"variation",l:"Le montant varie-t-il selon la composition familiale ?",hint:"Choisissez cumulable si un couple touche deux fois le montant renseigné ci-dessus.",type:"radio",opts:["Cumulable sans plafond","Cumulable avec plafond","Montant unique, identique pour tous"]},
+ {k:"plafond",l:"Montant du plafond",type:"num",suf:"€",show:()=>A.variation==="Cumulable avec plafond"},
+ {k:"duree",g:"Durée et évolution",l:"Durée de détention de l’aide",type:"dur",req:1},
+ {k:"evolution",l:"Évolution du montant de l’aide",hint:"Si le montant diminue entre le début et la fin de l'aide, choisissez dégressive.",type:"radio",opts:["Progressive","Dégressive","Fixe"]},
+ {k:"sort_restantes",l:"Qu'advient-il des sommes transférées mais non dépensées ?",type:"radio",opts:["Récupérées par la structure","Peuvent être dépensées dans un temps imparti, puis récupérées","Peuvent être dépensées jusqu’à épuisement"]},
+ {k:"sort_delai",l:"Temps imparti",type:"dur",show:()=>A.sort_restantes==="Peuvent être dépensées dans un temps imparti, puis perdues"},
+ {k:"participation",g:"Participation financière",l:"Les participants contribuent-ils financièrement ?",type:"radio",opts:["Oui","Non"]},
+ {k:"participation_pct",l:"À quelle hauteur ?",hint:"Part payée par le participant, en pourcentage.",type:"num",suf:"%",max:100,show:()=>A.participation==="Oui"}]},
+{t:"Le dispositif",q:[
+ {k:"format",g:"L’outil et son public",l:"Format de l’outil",hint:"Plusieurs réponses possibles.",type:"check",req:1,opts:["Chèque papier","Application mobile","Carte","Remboursement post-achat","Autre"],other:1},
+ sc("eligibilite","Éligibilité : qui peut en bénéficier ?","Ciblé sur une population spécifique (ex : femmes enceintes, étudiants…)","Universel","Sous contrainte de ressources (ex : reste à vivre journalier plafonné)",1),
+ {...sc("fleche_produits","Fléchage des produits","Fléché sur certains produits","Non fléché","Incitation sur certains produits (ex : bonification)",1,"Exemples : fruits, légumes, légumineuses..."),g:"Fléchage"},
+ sc("fleche_distribution","Fléchage des circuits de distribution","Fléché sur certains circuits","Non fléché","Incitation sur certains circuits (ex : bonification)",1,"Exemples : produits bio, circuit court…"),
+ {...sc("implication","Implication des participants","Simples bénéficiaires","Participants impliqués dans l’élaboration du projet","Participants consultés",1),g:"Implication des acteurs"},
+ sc("fournisseurs","Information des fournisseurs - points de vente","Fournisseurs peu informés","Fournisseurs associés au projet","Fournisseurs consultés",1)]},
+{t:"Objectifs et contraintes",q:[
+ {k:"rank",g:"Objectifs",l:"Objectifs principaux, du plus important au plus secondaire",hint:"Cliquez dans l’ordre : le premier objectif cliqué est classé 1er, le dernier 5e. Recliquez pour retirer un objectif.",type:"rank",req:1,
+  opts:[["acces","Accès : lutte contre les inégalités alimentaires"],["prod","Production : transition agroécologique du secteur agricole"],["dist","Distribution : promotion de circuits de distribution durables (direct producteur, circuit court...)"],["sante","Santé : alignement avec le Plan National Nutrition Santé (PNNS)"],["conso","Consommation : transition alimentaire, évolution des habitudes"]]},
+ {k:"annexes",g:"Activités annexes",l:"Le projet comprend-il des activités annexes au transfert monétaire ?",type:"radio",req:1,opts:["Oui","Non"]},
+ {k:"annexes_liste",l:"Lesquelles ?",hint:"Plusieurs réponses possibles.",type:"check",show:()=>A.annexes==="Oui",other:1,opts:["Ateliers cuisine","Repas partagé","Actions de sensibilisation santé","Temps de consultation ou de réflexion sur l’aide","Autre"]},
+ {k:"indicateurs",g:"Évaluation",l:"Indicateurs mesurés",hint:"Plusieurs réponses possibles.",type:"check",other:1,opts:["Insuffisance alimentaire","Diversité alimentaire des ménages","Indice de stratégies d’adaptation alimentaire des ménages","Indice de disponibilité en fruits et légumes","Échelle de bien-être (OMS)","Échelle de perception du soutien social (ACF)","Autre"]},
+ {k:"moment_questionnaires",l:"À quel moment faites-vous passer des questionnaires ou entretiens ?",hint:"Plusieurs réponses possibles.",type:"check",req:1,opts:["Avant le début","Au début","Pendant","À la fin","Après la fin"]},
+ {k:"conf",g:"Contraintes de l’action publique",l:"Comment le projet a-t-il fait face aux contraintes liées à l'action publique ?",hint:"Facultatif. 1 = contrainte facilement gérée, 5 = contrainte difficilement gérée.",type:"grid",
+  rows:[["faisabilite","Faisabilité technique"],["cout","Coût financier et administratif"],["legalite","Légalité"],["acces_egal","Accès égal sur le territoire"],["proportionnalite","Proportionnalité"],["non_recours","Limitation du non-recours"],["dignite","Respect de la dignité"],["economie","Soutien à l’économie"]].map(r=>({k:"conf_"+r[0],l:r[1]}))}]}
+];
+let A={},step=0,showErr=false,sent=null;
+try{const s=JSON.parse(localStorage.getItem("gep")||"{}");A=s.A||{};step=Math.min(s.step||0,S.length-1)}catch(e){}
+const $=id=>document.getElementById(id);
+const h=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const save=()=>{try{localStorage.setItem("gep",JSON.stringify({A,step}))}catch(e){}
+ const el=$("saved");if(el){el.classList.add("on");clearTimeout(save._t);save._t=setTimeout(()=>el.classList.remove("on"),1500)}};
+const scale=(k,o,labelledby)=>`<div class="sc" role="radiogroup" ${labelledby?`aria-labelledby="${labelledby}"`:`aria-label="${o}"`}>${[1,2,3,4,5].map(n=>`<label><input type="radio" name="${k}" data-k="${k}" data-n="${n}" ${A[k]===n?"checked":""}><span>${n}</span></label>`).join("")}</div>`;
+const bigscale=q=>{const v=A[q.k];return`<div class="s5" role="radiogroup" aria-labelledby="lab-${q.k}">${[1,2,3,4,5].map(n=>`<div class="c"><label><input type="radio" name="${q.k}" data-k="${q.k}" data-n="${n}" ${v===n?"checked":""}><span>${n}</span></label><small>${h((n==1?q.lo:n==5?q.hi:n==3?q.mid:"")||"")}</small></div>`).join("")}</div>`};
+function prog(){let t=0,o=0;S.forEach(s=>s.q.forEach(q=>{if(q.req&&!(q.show&&!q.show())){t++;if(!bad(q))o++}}));$("bar").style.width=(t?o/t*100:0)+"%";$("pt").textContent=o+" sur "+t+" réponses obligatoires"}
+function bad(q){if(!q.req)return false;if(q.type=="dur")return!A[q.k+"_nb"]||!A[q.k+"_unite"];if(q.type=="rank")return(A.rank||[]).length<5;if(q.type=="grid")return q.rows.some(r=>!A[r.k]);const v=A[q.k];return v===undefined||String(v).trim()===""}
+function Q(q){
+ if(q.show&&!q.show())return"";
+ let b="";
+ const v=A[q.k];
+ if(q.type=="text")b=`<input class="in" id="${q.k}" data-k="${q.k}" value="${h(v||"")}">`;
+ if(q.type=="num")b=`<input class="in n" id="${q.k}" type="number" min="0" ${q.max?`max="${q.max}"`:""} inputmode="decimal" data-k="${q.k}" value="${h(v??"")}">${q.suf?`<span class="suf">${q.suf}</span>`:""}`;
+ if(q.type=="dur")b=`<div class="opts"><input class="in n" type="number" min="1" inputmode="numeric" data-k="${q.k}_nb" aria-label="Nombre" placeholder="Nombre" value="${h(A[q.k+"_nb"]??"")}"><select class="in n" data-k="${q.k}_unite" aria-label="Unité"><option value="">Choisir</option>${["semaines","mois"].map(u=>`<option ${A[q.k+"_unite"]===u?"selected":""}>${u}</option>`).join("")}</select></div>`;
+ if(q.type=="radio"||q.type=="check"){
+  const ty=q.type=="radio"?"radio":"checkbox";
+  b=`<div class="opts" role="group" aria-labelledby="lab-${q.k}">${q.opts.map(o=>`<label class="ch"><input type="${ty}" name="${q.k}" data-k="${q.k}" value="${h(o)}" ${(ty=="radio"?v===o:(v||[]).includes(o))?"checked":""}><span>${h(o)}</span></label>`).join("")}</div>`;
+  const oth=ty=="radio"?v==="Autre":(v||[]).includes("Autre");
+  if(q.other&&oth)b+=`<p style="margin:10px 0 0"><input class="in" data-k="${q.k}_autre" placeholder="Précisez" aria-label="Précisez" value="${h(A[q.k+"_autre"]||"")}"></p>`;
+ }
+ if(q.type=="scale")b=bigscale(q);
+ if(q.type=="grid")b=q.rows.map(r=>`<div class="row"><div id="lab-${r.k}">${h(r.l)}</div>${scale(r.k,null,"lab-"+r.k)}</div>`).join("");
+ if(q.type=="rank"){const R=A.rank||[];b=`<div class="rks" role="group" aria-labelledby="lab-${q.k}">${q.opts.map(o=>{const i=R.indexOf(o[0]);return`<button type="button" class="rk ${i>=0?"on":""}" data-rk="${o[0]}"><b>${i>=0?i+1:""}</b><span>${h(o[1])}</span></button>`}).join("")}</div>`+(R.length?`<button type="button" class="lnk" data-reset>Tout réinitialiser</button>`:"")}
+ const lab=q.type=="text"||q.type=="num"?`<label for="${q.k}">`:`<div class="t" id="lab-${q.k}">`,end=lab[1]=="l"?"</label>":"</div>";
+ return(q.g?`<h3 class="g">${h(q.g)}</h3>`:"")+`<div class="q ${showErr&&bad(q)?"err":""}" id="q-${q.k}">${lab}${h(q.l)}${q.req?' <span class="req" aria-hidden="true">*</span>':""}${end}${q.hint?`<p class="hint">${h(q.hint)}</p>`:""}${b}<div class="msg" role="alert">${q.type=="rank"?"Classez les 5 objectifs.":"Réponse obligatoire."}</div></div>`;
+}
+function missing(){return S[step].q.filter(q=>!(q.show&&!q.show())&&bad(q))}
+function render(){
+ prog();
+ $("steps").innerHTML=S.map((s,i)=>`<li class="${i==step?"on":i<step?"done":""}"><button type="button" data-go="${i}" ${sent!==null?"disabled":""} ${i==step?'aria-current="step"':""}><b>${i<step?"✓":i+1}</b><span>${h(s.t)}</span></button></li>`).join("");
+ if(sent!==null){$("steps").style.display="none";$("prog").style.display="none";$("card").innerHTML=`<div class="end"><h2>${sent?"Merci, vos réponses sont envoyées":"Vos réponses sont prêtes"}</h2><p class="sub">${sent?"Vous pouvez en garder une copie.":"Téléchargez le fichier ci-dessous et envoyez-le à la personne qui coordonne le groupe d’échange de pratiques."}</p><button class="btn" data-dl>Télécharger mes réponses (CSV)</button></div>`;return}
+ const s=S[step],last=step==S.length-1,m=missing();
+ if(s.intro){$("card").innerHTML=`<h2 class="intro-title">Analyse croisée des expérimentations de transferts&nbsp;monétaires</h2><div class="intro-txt"><p>Le groupe d’échange de pratiques autour des chèques alimentation durable a été créé en 2023 par la délégation du Var du Secours Catholique. Il visait notamment à identifier des indicateurs communs afin de permettre de comparer les différentes expérimentations.</p><p>Aujourd’hui, au regard de l’incertitude concernant les financements et des retours d’expériences de plus en plus nombreux, il a été proposé de matérialiser cette comparaison, à des fins de plaidoyer.</p><p>Cela implique d'abord de mener une analyse croisée des projets arrivant ou arrivés à leur terme. C'est pour débuter ce travail que ce questionnaire a été créé. Il vise à recenser les caractéristiques et modalités des différentes expérimentations, afin d’en identifier les points communs et points divergents. Cette classification est un préalable à tout travail d'analyse des éléments d'évaluation.</p><p class="dur"><b>Durée estimée : 5 à 10 minutes.</b></p><p class="note">Les questions marquées d’un <span class="req">*</span> sont obligatoires. Vos réponses sont gardées automatiquement dans ce navigateur.</p></div><div class="nav"><span></span><button class="btn" type="button" data-next>Commencer</button></div>`;return}
+ $("card").innerHTML=`<h2>${h(s.t)}</h2><p class="sub">Étape ${step+1} sur ${S.length}${s.d?". "+h(s.d):""}</p>${showErr&&m.length?`<div class="errs" role="alert"><p>${m.length>1?m.length+" réponses obligatoires manquent sur cette étape :":"1 réponse obligatoire manque sur cette étape :"}</p>${m.map(q=>`<button type="button" data-jump="${q.k}">${h(q.l)}</button>`).join("")}</div>`:""}${s.q.map(Q).join("")}<div class="nav">${step?'<button class="btn g" type="button" data-back>Retour</button>':"<span></span>"}<button class="btn" type="button" data-next>${last?"Envoyer mes réponses":"Continuer"}</button></div>`;
+}
+function toTop(){window.scrollTo({top:0,behavior:"smooth"})}
+function flat(){
+ const o={horodatage:new Date().toISOString()};
+ S.forEach(s=>s.q.forEach(q=>{
+  if(q.show&&!q.show()){o[q.k]="";if(q.other)o[q.k+"_autre"]="";return}
+  if(q.type=="rank"){q.opts.forEach(p=>{const i=(A.rank||[]).indexOf(p[0]);o["objectif_"+p[0]]=i>=0?i+1:""})}
+  else if(q.type=="dur"){o[q.k+"_nb"]=A[q.k+"_nb"]??"";o[q.k+"_unite"]=A[q.k+"_unite"]||""}
+  else if(q.type=="grid")q.rows.forEach(r=>o[r.k]=A[r.k]??"");
+  else{const v=A[q.k];o[q.k]=Array.isArray(v)?v.join(" | "):(v??"");if(q.other)o[q.k+"_autre"]=A[q.k+"_autre"]||""}
+ }));return o}
+function csv(){const o=flat(),e=v=>'"'+String(v).replace(/"/g,'""')+'"';return"\ufeff"+Object.keys(o).map(e).join(",")+"\n"+Object.values(o).map(e).join(",")}
+async function send(){
+ const btn=document.querySelector("[data-next]");btn.disabled=true;btn.textContent="Envoi en cours…";
+ if(CFG.ENDPOINT){try{await fetch(CFG.ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(flat())});sent=true}catch(e){sent=false}}else sent=false;
+ try{localStorage.removeItem("gep")}catch(e){}
+ render();toTop();
+}
+const root=document.body;
+function redraw(){const f=document.activeElement,key=f&&f.dataset&&f.dataset.k,n=f&&f.dataset&&f.dataset.n,val=f&&f.value;const y=scrollY;render();scrollTo(0,y);
+ if(key){const t=document.querySelector(`[data-k="${key}"]${n?`[data-n="${n}"]`:val!==undefined&&val!==""?`[value="${CSS.escape(val)}"]`:""}`)||document.getElementById(key);t&&t.focus()}}
+root.addEventListener("input",e=>{const t=e.target,k=t.dataset.k;if(!k)return;
+ if(t.type=="checkbox"){const a=A[k]||[];A[k]=t.checked?[...a,t.value]:a.filter(x=>x!==t.value);redraw()}
+ else if(t.type=="radio"){A[k]=t.dataset.n?Number(t.dataset.n):t.value;if(!t.dataset.n)redraw()}
+ else A[k]=t.value;
+ save();prog()});
+root.addEventListener("keydown",e=>{if(e.key=="Enter"&&e.target.matches("input.in")){e.preventDefault();const b=document.querySelector("[data-next]");b&&b.click()}});
+root.addEventListener("click",e=>{const t=e.target.closest("button");if(!t)return;
+ if(t.dataset.rk){const R=A.rank||[],k=t.dataset.rk;A.rank=R.includes(k)?R.filter(x=>x!==k):[...R,k];save();redraw()}
+ else if("reset" in t.dataset){A.rank=[];save();redraw()}
+ else if(t.dataset.jump){const el=document.getElementById("q-"+t.dataset.jump);el&&el.scrollIntoView({block:"center",behavior:"smooth"})}
+ else if(t.dataset.go!==undefined){step=+t.dataset.go;showErr=false;save();render();toTop()}
+ else if("back" in t.dataset){step--;showErr=false;save();render();toTop()}
+ else if("next" in t.dataset){
+  const miss=missing();
+  if(miss.length){showErr=true;render();const el=document.querySelector(".q.err");el&&el.scrollIntoView({block:"center",behavior:"smooth"});return}
+  showErr=false;
+  if(step==S.length-1)send();else{step++;save();render();toTop()}}
+ else if("dl" in t.dataset){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv()],{type:"text/csv;charset=utf-8"}));a.download="reponses-gep.csv";a.click()}
+});
+render();
+</script>
+</body>
+</html>
