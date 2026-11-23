@@ -117,7 +117,7 @@ noscript p{color:var(--err);font-weight:700}
 <div class="logo"><div style="text-align: center;">
   <div>Groupe d’échanges de pratiques</div>
    <div>Transferts monétaires alimentation durable</div>
-</div><img src="photo.png" alt="Ville de Nanterre"></div>
+</div><img src="logo-nanterre.png" alt="Ville de Nanterre"></div>
 </aside>
 <main class="main"><div class="card" id="card"></div></main>
 </div>
@@ -134,7 +134,8 @@ const S=[
  {k:"usagers_personnes",g:"Les usagers",l:"Nombre de personnes concernées",type:"num"},
  {k:"usagers_foyers",l:"Nombre de foyers ou familles concernés",type:"num"},
  {k:"etat_eval",g:"L’évaluation",l:"État d’avancement de l’évaluation",type:"radio",req:1,opts:["Terminée","En cours (certains éléments sont déjà disponibles)","En cours (aucun élément disponible pour l’instant)","À venir"]},
- {k:"etat_eval_prec",l:"Précisez",hint:"Quels éléments sont déjà disponibles ?",type:"text",show:()=>A.etat_eval==="En cours (certains éléments sont déjà disponibles)"}]},
+ {k:"etat_eval_prec",l:"Précisez",hint:"Quels éléments sont déjà disponibles ?",type:"text",show:()=>A.etat_eval==="En cours (certains éléments sont déjà disponibles)"},
+ {k:"fichiers_analyse",l:"Éléments d’analyse de l’évaluation",hint:"Rapport, synthèse ou résultats déjà disponibles (PDF).",type:"file",show:()=>["Terminée","En cours (certains éléments sont déjà disponibles)"].includes(A.etat_eval)}]},
 {t:"L’aide",q:[
  {k:"montant",g:"Le montant",l:"Montant mensuel par adulte",hint:"En euros",type:"num",suf:"€",req:1},
  {k:"variation",l:"Le montant varie-t-il selon la composition familiale ?",hint:"Choisissez cumulable si un couple touche deux fois le montant renseigné ci-dessus.",type:"radio",opts:["Cumulable sans plafond","Cumulable avec plafond","Montant unique, identique pour tous"]},
@@ -159,10 +160,11 @@ const S=[
  {k:"annexes_liste",l:"Lesquelles ?",hint:"Plusieurs réponses possibles.",type:"check",show:()=>A.annexes==="Oui",other:1,opts:["Ateliers cuisine","Repas partagé","Actions de sensibilisation santé","Temps de consultation ou de réflexion sur l’aide","Autre"]},
  {k:"indicateurs",g:"Évaluation",l:"Indicateurs mesurés",hint:"Plusieurs réponses possibles.",type:"check",other:1,opts:["Insuffisance alimentaire","Diversité alimentaire des ménages","Indice de stratégies d’adaptation alimentaire des ménages","Indice de disponibilité en fruits et légumes","Échelle de bien-être (OMS)","Échelle de perception du soutien social (ACF)","Autre"]},
  {k:"moment_questionnaires",l:"À quel moment faites-vous passer des questionnaires ou entretiens ?",hint:"Plusieurs réponses possibles.",type:"check",req:1,opts:["Avant le début","Au début","Pendant","À la fin","Après la fin"]},
+ {k:"fichiers_questionnaires",l:"Questionnaires ou guides d’entretien vierges",hint:"Déposez les documents utilisés (PDF).",type:"file"},
  {k:"conf",g:"Contraintes de l’action publique",l:"Comment le projet a-t-il fait face aux contraintes liées à l'action publique ?",hint:"Facultatif. 1 = contrainte facilement gérée, 5 = contrainte difficilement gérée.",type:"grid",
   rows:[["faisabilite","Faisabilité technique"],["cout","Coût financier et administratif"],["legalite","Légalité"],["acces_egal","Accès égal sur le territoire"],["proportionnalite","Proportionnalité"],["non_recours","Limitation du non-recours"],["dignite","Respect de la dignité"],["economie","Soutien à l’économie"]].map(r=>({k:"conf_"+r[0],l:r[1]}))}]}
 ];
-let A={},step=0,showErr=false,sent=null;
+let A={},step=0,showErr=false,sent=null;const FILES={};
 try{const s=JSON.parse(localStorage.getItem("gep")||"{}");A=s.A||{};step=Math.min(s.step||0,S.length-1)}catch(e){}
 const $=id=>document.getElementById(id);
 const h=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -186,6 +188,7 @@ function Q(q){
   if(q.other&&oth)b+=`<p style="margin:10px 0 0"><input class="in" data-k="${q.k}_autre" placeholder="Précisez" aria-label="Précisez" value="${h(A[q.k+"_autre"]||"")}"></p>`;
  }
  if(q.type=="scale")b=bigscale(q);
+ if(q.type=="file")b=`<input type="file" accept="application/pdf" multiple data-file="${q.k}"><ul class="hint">${(FILES[q.k]||[]).map(f=>`<li>${h(f.name)}</li>`).join("")}</ul>`;
  if(q.type=="grid")b=q.rows.map(r=>`<div class="row"><div id="lab-${r.k}">${h(r.l)}</div>${scale(r.k,null,"lab-"+r.k)}</div>`).join("");
  if(q.type=="rank"){const R=A.rank||[];b=`<div class="rks" role="group" aria-labelledby="lab-${q.k}">${q.opts.map(o=>{const i=R.indexOf(o[0]);return`<button type="button" class="rk ${i>=0?"on":""}" data-rk="${o[0]}"><b>${i>=0?i+1:""}</b><span>${h(o[1])}</span></button>`}).join("")}</div>`+(R.length?`<button type="button" class="lnk" data-reset>Tout réinitialiser</button>`:"")}
  const lab=q.type=="text"||q.type=="num"?`<label for="${q.k}">`:`<div class="t" id="lab-${q.k}">`,end=lab[1]=="l"?"</label>":"</div>";
@@ -195,7 +198,7 @@ function missing(){return S[step].q.filter(q=>!(q.show&&!q.show())&&bad(q))}
 function render(){
  prog();
  $("steps").innerHTML=S.map((s,i)=>`<li class="${i==step?"on":i<step?"done":""}"><button type="button" data-go="${i}" ${sent!==null?"disabled":""} ${i==step?'aria-current="step"':""}><b>${i<step?"✓":i+1}</b><span>${h(s.t)}</span></button></li>`).join("");
- if(sent!==null){$("steps").style.display="none";$("prog").style.display="none";$("card").innerHTML=`<div class="end"><h2>${sent?"Merci ! Vos réponses sont envoyées":"Vos réponses sont prêtes"}</h2><p class="sub">${sent?"Vous pouvez en garder une copie si besoin.":"Téléchargez le fichier ci-dessous et envoyez-le à la personne qui coordonne le groupe d’échange de pratiques."}</p><button class="btn" data-dl>Télécharger mes réponses (CSV)</button></div>`;return}
+ if(sent!==null){$("steps").style.display="none";$("prog").style.display="none";$("card").innerHTML=`<div class="end"><h2>${sent?"Merci, vos réponses sont envoyées":"Vos réponses sont prêtes"}</h2><p class="sub">${sent?"Vous pouvez en garder une copie.":"Téléchargez le fichier ci-dessous et envoyez-le à la personne qui coordonne le groupe d’échange de pratiques."}</p><button class="btn" data-dl>Télécharger mes réponses (CSV)</button></div>`;return}
  const s=S[step],last=step==S.length-1,m=missing();
  if(s.intro){$("card").innerHTML=`<h2 class="intro-title">Analyse croisée des expérimentations de transferts&nbsp;monétaires</h2><div class="intro-txt"><p>Le groupe d’échange de pratiques autour des chèques alimentation durable a été créé en 2023 par la délégation du Var du Secours Catholique. Il visait notamment à identifier des indicateurs communs afin de permettre de comparer les différentes expérimentations.</p><p>Aujourd’hui, au regard de l’incertitude concernant les financements et des retours d’expériences de plus en plus nombreux, il a été proposé de matérialiser cette comparaison, à des fins de plaidoyer.</p><p>Cela implique d'abord de mener une analyse croisée des projets arrivant ou arrivés à leur terme. C'est pour débuter ce travail que ce questionnaire a été créé. Il vise à recenser les caractéristiques et modalités des différentes expérimentations, afin d’en identifier les points communs et points divergents. Cette classification est un préalable à tout travail d'analyse des éléments d'évaluation.</p><p class="dur"><b>Durée estimée : 5 à 10 minutes.</b></p><p class="note">Les questions marquées d’un <span class="req">*</span> sont obligatoires. Vos réponses sont gardées automatiquement dans ce navigateur.</p></div><div class="nav"><span></span><button class="btn" type="button" data-next>Commencer</button></div>`;return}
  $("card").innerHTML=`<h2>${h(s.t)}</h2><p class="sub">Étape ${step+1} sur ${S.length}${s.d?". "+h(s.d):""}</p>${showErr&&m.length?`<div class="errs" role="alert"><p>${m.length>1?m.length+" réponses obligatoires manquent sur cette étape :":"1 réponse obligatoire manque sur cette étape :"}</p>${m.map(q=>`<button type="button" data-jump="${q.k}">${h(q.l)}</button>`).join("")}</div>`:""}${s.q.map(Q).join("")}<div class="nav">${step?'<button class="btn g" type="button" data-back>Retour</button>':"<span></span>"}<button class="btn" type="button" data-next>${last?"Envoyer mes réponses":"Continuer"}</button></div>`;
@@ -213,7 +216,7 @@ function flat(){
 function csv(){const o=flat(),e=v=>'"'+String(v).replace(/"/g,'""')+'"';return"\ufeff"+Object.keys(o).map(e).join(",")+"\n"+Object.values(o).map(e).join(",")}
 async function send(){
  const btn=document.querySelector("[data-next]");btn.disabled=true;btn.textContent="Envoi en cours…";
- if(CFG.ENDPOINT){try{await fetch(CFG.ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(flat())});sent=true}catch(e){sent=false}}else sent=false;
+ if(CFG.ENDPOINT){try{await fetch(CFG.ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({...flat(),_files:Object.entries(FILES).flatMap(([champ,l])=>l.map(f=>({champ,name:f.name,data:f.data})))})});sent=true}catch(e){sent=false}}else sent=false;
  try{localStorage.removeItem("gep")}catch(e){}
  render();toTop();
 }
@@ -239,6 +242,12 @@ root.addEventListener("click",e=>{const t=e.target.closest("button");if(!t)retur
   if(step==S.length-1)send();else{step++;save();render();toTop()}}
  else if("dl" in t.dataset){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv()],{type:"text/csv;charset=utf-8"}));a.download="reponses-gep.csv";a.click()}
 });
+root.addEventListener("change",async e=>{const t=e.target,k=t.dataset.file;if(!k)return;
+ const fs=[...t.files].filter(f=>f.type=="application/pdf");
+ const autres=Object.entries(FILES).filter(([c])=>c!=k).reduce((s,[,v])=>s+v.reduce((a,f)=>a+f.size,0),0);
+ if(autres+fs.reduce((s,f)=>s+f.size,0)>8e6){alert("8 Mo maximum au total.");t.value="";return}
+ FILES[k]=await Promise.all(fs.map(f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r({name:f.name,size:f.size,data:x.result.split(",")[1]});x.readAsDataURL(f)})));
+ redraw()});
 render();
 </script>
 </body>
